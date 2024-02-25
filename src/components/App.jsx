@@ -62,9 +62,12 @@ const App = () => {
       }
     }
     addImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, page]);
 
   const handleFormSubmit = searchQueryText => {
+    if (error) {
+    }
     if (searchQuery === searchQueryText) {
       Notify.NotificationInfo(Notify.ALREADY_SHOWN_MESSAGE);
       return;
