@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { animateScroll as scroll } from 'react-scroll';
 
@@ -13,116 +13,95 @@ import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
 
 const imagesPerPage = 12;
-class App extends Component {
-  state = {
-    searchQuery: '',
-    page: 1,
 
-    images: [],
-    totalImages: 0,
-    isLoading: false,
-    error: '',
-    showModal: false,
-    modalImage: {},
-    showLoadMore: false,
-  };
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState({});
+  const [showLoadMore, setShowLoadMore] = useState(false);
 
-  componentDidUpdate(_, prevState) {
-    if (
-      this.state.searchQuery !== prevState.searchQuery ||
-      this.state.page !== prevState.page
-    ) {
-      this.addImages();
+  useEffect(() => {
+    if (searchQuery === '') {
+      return;
     }
-  }
 
-  addImages = async () => {
-    const searchQuery = this.state.searchQuery;
-    const page = this.state.page;
+    async function addImages() {
+      try {
+        setIsLoading(true);
+        setError('');
 
-    try {
-      this.setState({ isLoading: true, error: '' });
+        const response = await getImagesApi(searchQuery, page, imagesPerPage);
 
-      const response = await getImagesApi(searchQuery, page, imagesPerPage);
+        if (response.hits.length > 0 && response.hits.length < imagesPerPage) {
+          Notify.NotificationInfo(Notify.INFO_MESSAGE);
+        }
 
-      this.setState(state => ({
-        images: [...state.images, ...response.hits],
-        isLoading: false,
-        totalImages: response.total,
-        showLoadMore: page < Math.ceil(response.total / imagesPerPage),
-      }));
+        if (!response.hits.length) {
+          Notify.NotificationError(Notify.NO_FOUND_MESSAGE);
+        }
 
-      if (response.hits.length > 0 && response.hits.length < imagesPerPage) {
-        Notify.NotificationInfo(Notify.INFO_MESSAGE);
+        setImages(prevImages => [...prevImages, ...response.hits]);
+        setIsLoading(false);
+        setError('');
+        setShowLoadMore(page < Math.ceil(response.total / imagesPerPage));
+      } catch (error) {
+        Notify.NotificationError(`${Notify.ERROR_MESSAGE} ${error.message}`);
+        setIsLoading(false);
+      } finally {
+        setIsLoading(false);
       }
 
-      if (!response.hits.length) {
-        Notify.NotificationError(Notify.NO_FOUND_MESSAGE);
+      if (images.length > imagesPerPage - 1) {
+        scroll.scrollToBottom();
+      } else {
+        scroll.scrollToTop();
       }
-    } catch (error) {
-      Notify.NotificationError(`${Notify.ERROR_MESSAGE} ${error.message}`);
-      this.setState({ isLoading: false });
-    } finally {
-      this.setState({ isLoading: false });
     }
+    addImages();
+  }, [searchQuery, page]);
 
-    if (this.state.images.length > imagesPerPage - 1) {
-      scroll.scrollToBottom();
-    } else {
-      scroll.scrollToTop();
-    }
-  };
-
-  handleFormSubmit = searchQuery => {
-    if (this.state.searchQuery === searchQuery) {
+  const handleFormSubmit = searchQueryText => {
+    if (searchQuery === searchQueryText) {
       Notify.NotificationInfo(Notify.ALREADY_SHOWN_MESSAGE);
       return;
     }
-    this.setState({
-      searchQuery: searchQuery,
-      page: 1,
-      images: [],
-    });
+
+    setSearchQuery(searchQueryText);
+    setImages([]);
+    setPage(1);
   };
 
-  handleOnClickLoadMoreBtn = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const handleOnClickLoadMoreBtn = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  onModalOpen = image => {
-    this.setState(({ showModal }) => ({
-      modalImage: image,
-      showModal: !showModal,
-    }));
+  const onModalOpen = image => {
+    setModalImage(image);
+    setShowModal(!showModal);
   };
 
-  onModaClose = () => {
-    this.setState(() => ({
-      showModal: false,
-    }));
+  const onModaClose = () => {
+    setShowModal(false);
   };
 
-  render() {
-    const { images, showLoadMore, isLoading, showModal, modalImage } =
-      this.state;
-
-    return (
-      <Section>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        <ImageGalleryList images={images} onModalOpen={this.onModalOpen} />
-        {isLoading && <Loader />}
-        {showLoadMore && <Button onClick={this.handleOnClickLoadMoreBtn} />}
-        {showModal && (
-          <Modal onModalClose={this.onModaClose}>
-            <img src={modalImage.largeImageURL} alt={modalImage.tags} />
-          </Modal>
-        )}
-        <ToastContainer />
-      </Section>
-    );
-  }
-}
+  return (
+    <Section>
+      <Searchbar onSubmit={handleFormSubmit} />
+      <ImageGalleryList images={images} onModalOpen={onModalOpen} />
+      {isLoading && <Loader />}
+      {showLoadMore && <Button onClick={handleOnClickLoadMoreBtn} />}
+      {showModal && (
+        <Modal onModalClose={onModaClose}>
+          <img src={modalImage.largeImageURL} alt={modalImage.tags} />
+        </Modal>
+      )}
+      <ToastContainer />
+    </Section>
+  );
+};
 
 export default App;

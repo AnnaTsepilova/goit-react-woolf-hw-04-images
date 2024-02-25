@@ -3,8 +3,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const INFO_MESSAGE =
   "We're sorry, but you've reached the end of search results.";
-const ALREADY_SHOWN_MESSAGE =
-  "We're sorry, but you've reached the end of search results.";
+const ALREADY_SHOWN_MESSAGE = 'Results have already shown';
 const EMPTY_QUERY_MESSAGE = 'Please enter your search query.';
 const NO_FOUND_MESSAGE =
   'Sorry, there are no images matching your search query. Please try again.';
