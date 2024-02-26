@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { animateScroll as scroll } from 'react-scroll';
 
 import getImagesApi from 'services/galleryApi';
 import * as Notify from 'services/notifications';
@@ -54,15 +53,8 @@ const App = () => {
       } finally {
         setIsLoading(false);
       }
-
-      if (images.length > imagesPerPage - 1) {
-        scroll.scrollToBottom();
-      } else {
-        scroll.scrollToTop();
-      }
     }
     addImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, page]);
 
   const handleFormSubmit = searchQueryText => {
@@ -94,7 +86,11 @@ const App = () => {
   return (
     <Section>
       <Searchbar onSubmit={handleFormSubmit} />
-      <ImageGalleryList images={images} onModalOpen={onModalOpen} />
+      <ImageGalleryList
+        images={images}
+        onModalOpen={onModalOpen}
+        imagesPerPage={imagesPerPage}
+      />
       {isLoading && <Loader />}
       {showLoadMore && <Button onClick={handleOnClickLoadMoreBtn} />}
       {showModal && (

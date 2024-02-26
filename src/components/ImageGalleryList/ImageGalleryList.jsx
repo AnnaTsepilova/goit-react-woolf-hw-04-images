@@ -1,7 +1,17 @@
+import { useEffect } from 'react';
+import { animateScroll as scroll } from 'react-scroll';
 import css from './ImageGalleryList.module.css';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 
-export default function ImageGalleryList({ images, onModalOpen }) {
+const ImageGalleryList = ({ images, onModalOpen, imagesPerPage }) => {
+  useEffect(() => {
+    if (images.length > imagesPerPage) {
+      scroll.scrollToBottom();
+    } else {
+      scroll.scrollToTop();
+    }
+  }, [images.length, imagesPerPage]);
+
   return (
     <ul className={css.imageGalleryContainer}>
       {images.map(image => (
@@ -13,4 +23,6 @@ export default function ImageGalleryList({ images, onModalOpen }) {
       ))}
     </ul>
   );
-}
+};
+
+export default ImageGalleryList;
